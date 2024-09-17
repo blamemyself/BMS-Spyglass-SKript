@@ -1,0 +1,502 @@
+import:
+	org.bukkit.Sound
+	org.bukkit.entity.Entity
+	
+#  		            	    -------------------------------------------------------------------	
+
+
+variables:
+	{counter} = 0
+	{scanned_players} = ""
+	{bms_has_spyglass} = false
+
+
+
+
+
+#GIVE SPYGLASS 			    -------------------------------------------------------------------		      GIVE SPYGLASS
+
+
+
+command /blamescan [<player>]:
+	permission: *
+	trigger:
+		set {name.blamemyself} to arg-1
+		set {bms_has_spyglass} to true
+		send title "" to {name.blamemyself} for 6 seconds
+		play sound "ENTITY_WARDEN_LISTENING"  with volume 0.6 with pitch 0.2 for {name.blamemyself}
+		send subtitle "§4§lМатричный элемент<reset>§l течет в твоих жилах." to {name.blamemyself} for 3 seconds
+		play sound "ENTITY_WARDEN_NEARBY_CLOSER"  with volume 0.6 with pitch 0.2 for {name.blamemyself}
+		wait 3 second
+		play sound "ENTITY_WARDEN_NEARBY_CLOSER"  with volume 0.6 with pitch 0.2 for {name.blamemyself}
+		send subtitle "§k§lТЫ ПОГИБНЕШЬ ЕСЛИ ВСПОМНИШЬ СВОЕ ПРОШЛОЕ." FOR 1 second
+		wait 1 second
+		play sound "ENTITY_WARDEN_NEARBY_CLOSEST"  with volume 0.6 with pitch 0.2 for {name.blamemyself}
+		send subtitle "§lТеперь ты видишь §4больше<reset>§l, чем остальные." to {name.blamemyself} for 3 seconds
+		give glowing spyglass named "&r[ §4§lЛИНзА§r &r]" with lore "§oАппарат функционирующий лишь благодаря §4Матричному Элементу." to {name.blamemyself}
+
+
+
+
+
+#MODE SWAP BLAME			-------------------------------------------------------------------				MODE SWAP BLAME
+
+variables:
+	{bms.mode} = "players"
+	{spy.mode} = "sonic"
+
+on swap hand items:
+	if player is {name.blamemyself}:
+
+		if event-player's tool is glowing spyglass named "[ §4§lЛИНзА§r ]" with lore "§oАппарат функционирующий лишь благодаря §4Матричному Элементу.":
+			cancel event
+			if {bms.mode} is "target":
+				set {bms.mode} to "mobs"
+				set {_frame} to frame of player
+				set {_circle3::*} to circle with radius 1.5 and density 8
+				set item cooldown of player's tool for player to 0.7 seconds
+				play sound "ITEM_LODESTONE_COMPASS_LOCK" with volume 1 with pitch 2 at player
+				play sound "BLOCK_CHORUS_FLOWER_GROW" with volume 1 with pitch 1.3 at player
+				show ash at player's head offset by {_circle3::*} in frame of player
+				send action bar "§8ᴍᴏᴅᴇ: §7ᴍᴏʙѕ"
+				
+			else if {bms.mode} is "mobs":
+				set {bms.mode} to "players"
+				set {_frame} to frame of player
+				set {_circle3::*} to circle with radius 1.5 and density 8
+				set item cooldown of player's tool for player to 0.7 seconds
+				play sound "ITEM_LODESTONE_COMPASS_LOCK" with volume 1 with pitch 1 at player
+				
+				play sound "BLOCK_CHORUS_FLOWER_GROW" with volume 1 with pitch 2 at player
+				show white ash at player's head offset by {_circle3::*} in frame of player
+				send action bar "§8ᴍᴏᴅᴇ: §7ᴘʟᴀʏᴇʀѕ"
+				
+			else if {bms.mode} is "players":
+				set {bms.mode} to "target"
+				set {_frame} to frame of player
+				set {_circle3::*} to circle with radius 1.5 and density 8
+				set item cooldown of player's tool for player to 0.7 seconds
+				play sound "ITEM_LODESTONE_COMPASS_LOCK" with volume 1 with pitch 0.3 at player
+				
+				play sound "BLOCK_CHORUS_FLOWER_GROW" with volume 10 with pitch 3 at player
+				#play sound "ITEM_TRIDENT_RETURN" with volume 10 with pitch 0.6 at player
+				show warped spore at player's head offset by {_circle3::*} in frame of player
+				send action bar "§8ᴍᴏᴅᴇ: §7ᴛᴀʀɢᴇᴛ"
+			
+			
+		
+		
+
+
+
+
+
+#PLAYERS SCAN BLAME			-------------------------------------------------------------------			    PLAYERS SCAN BLAME
+
+
+on leftclick with a spyglass:
+	if all:
+		{bms.mode} is "players"
+		player is sneaking
+		player is {name.blamemyself}
+		event-item is glowing spyglass named "[ §4§lЛИНзА§r ]" with lore "§oАппарат функционирующий лишь благодаря §4Матричному Элементу."
+	then:
+	
+		if difference between now and {last_scan.cooldown} is lower than 8 seconds:
+			send action bar "&4&lᴄʀɪᴛɪᴄᴀʟ ᴛᴇᴍᴘᴇʀᴀᴛᴜʀᴇ!" to player
+		else: 
+			set item cooldown of player's tool for player to 8 seconds
+			set {last_scan.cooldown} to now
+			play sound "PARTICLE_SOUL_ESCAPE" in master category with volume 1 with pitch 0.5 at player
+			play sound "INTENTIONALLY_EMPTY" with volume 1 with pitch 0.3 at player
+			
+			play sound "ENTITY_WARDEN_HEARTBEAT" in master category with volume 2 at player
+			
+			set {_frame} to frame of player
+			set {_circle::*} to circle with radius 1.5 and density 8
+			set {_circle2::*} to circle with radius 1.9 and density 0.4
+			set {_circle3::*} to circle with radius 1 and density 4
+			
+			show nautilus at player's head offset by {_circle::*} in frame of player
+			play sound "ITEM_LODESTONE_COMPASS_LOCK" with volume 1 with pitch 2 at player
+			show sonic boom at player's head offset by {_circle2::*} in frame of player
+			wait 0.3 second
+			
+			play sound "ITEM_LODESTONE_COMPASS_LOCK" with volume 1 with pitch 0.6 at player
+			wait 0.2 second
+			
+			show white ash at player's head offset by {_circle3::*} in frame of player
+			show flying glyph at player's location offset by {_circle::*} in frame of player
+			loop all players in radius 40 of player:
+				if loop-player is {name.blamemyself}:
+					send action bar "&c&lʀᴀᴅᴀʀ ᴀᴄᴛɪᴠᴀᴛᴇᴅ" to player
+
+					
+					
+
+				if loop-player is not {name.blamemyself}:
+					show wax on at helix at loop-player's head with radius 2, height -1.5, step 1 and density 5
+					show wax off at helix at loop-player's head with radius 1, height -1.5, step -1 and density 5
+
+					play sound "BLOCK_BEACON_ACTIVATE" with volume 0.5 with pitch 0.1 at loop-player
+					play sound "BLOCK_BELL_USE" with volume 0.5 with pitch 0.4 at loop-player
+					play sound "ENTITY_WARDEN_NEARBY_CLOSE"  with volume 0.6 with pitch 3 at loop-player
+					play sound "ITEM_LODESTONE_COMPASS_LOCK" with volume 1 with pitch 5 at loop-player
+					apply glowing without particles to loop-player for 7 seconds
+					send action bar "> ᴅᴇᴛᴇᴄᴛᴇᴅ <" to loop-player
+
+
+
+
+
+
+
+
+
+
+#MOBS SCAN BLAME		-------------------------------------------------------------------				MOBS SCAN BLAME
+
+
+on leftclick with a spyglass:
+	if all:
+		{bms.mode} is "mobs"
+		player is sneaking
+		player is {name.blamemyself}
+		event-item is glowing spyglass named "[ §4§lЛИНзА§r ]" with lore "§oАппарат функционирующий лишь благодаря §4Матричному Элементу."
+	then:
+		if difference between now and {last_scan.cooldown} is lower than 4 seconds:
+			send action bar "&4&lᴄʀɪᴛɪᴄᴀʟ ᴛᴇᴍᴘᴇʀᴀᴛᴜʀᴇ! " to player
+		else: 
+			set item cooldown of player's tool for player to 4 seconds
+			set {last_scan.cooldown} to now
+			play sound "PARTICLE_SOUL_ESCAPE" in master category with volume 1 with pitch 0.5 at player
+			play sound "INTENTIONALLY_EMPTY" with volume 1 with pitch 0.3 at player
+			
+			play sound "ENTITY_WARDEN_HEARTBEAT" in master category with volume 2 at player
+			
+			set {_frame} to frame of player
+			set {_circle::*} to circle with radius 1.5 and density 8
+			set {_circle2::*} to circle with radius 1.9 and density 0.4
+			set {_circle3::*} to circle with radius 1 and density 4
+			
+			show warped spore at player's head offset by {_circle::*} in frame of player
+			play sound "ITEM_LODESTONE_COMPASS_LOCK" with volume 1 with pitch 2 at player
+			show sonic boom at player's head offset by {_circle2::*} in frame of player
+			show wax off at helix at player's head with radius 2, height 1, step 1 and density 5
+			wait 0.3 second
+			
+			play sound "ITEM_LODESTONE_COMPASS_LOCK" with volume 1 with pitch 0.6 at player
+			wait 0.2 second
+			
+			show white ash at player's head offset by {_circle3::*} in frame of player
+			show flying glyph at player's location offset by {_circle::*} in frame of player
+			loop all entities in radius 60 of player:
+				
+				if loop-entity is not {name.blamemyself}:
+					if loop-entity is not player:
+						apply glowing without particles to loop-entity for 4 seconds
+						send action bar "> ᴅᴇᴛᴇᴄᴛᴇᴅ <" to loop-entity
+				if loop-entity is {name.blamemyself}:
+					remove glowing from player
+					send action bar "&c&lʀᴀᴅᴀʀ ᴀᴄᴛɪᴠᴀᴛᴇᴅ" to player
+				if loop-entity is player:
+					remove glowing from loop-entity
+					send action bar "&c&lʀᴀᴅᴀʀ ᴀᴄᴛɪᴠᴀᴛᴇᴅ" to player
+
+
+
+
+#TARGET SCAN BLAME		-------------------------------------------------------------------	
+
+command /activescanon:
+	permission: *
+	trigger: 
+		set {activescan_trigger} to true
+		send "ᴘᴀѕѕɪᴠᴇ ѕᴄᴀɴ ᴇɴᴀʙʟᴇᴅ" to player
+		play sound "BLOCK_NOTE_BLOCK_BELL" with volume 0.3 with pitch 1.2 to {name.blamemyself}
+		play sound "ITEM_LODESTONE_COMPASS_LOCK" with volume 0.3 with pitch 0.2 to {name.blamemyself}
+		
+command /activescanoff:
+	permission: *
+	trigger: 
+		set {activescan_trigger} to false
+		send "ᴘᴀѕѕɪᴠᴇ ѕᴄᴀɴ ᴅɪѕᴀʙʟᴇᴅ" to player
+		play sound "BLOCK_NOTE_BLOCK_BELL" with volume 0.3 with pitch 0.2 to {name.blamemyself}
+		play sound "ITEM_LODESTONE_COMPASS_LOCK" with volume 0.3 with pitch 0.2 to {name.blamemyself}
+
+
+every 10 seconds:
+	if {activescan_trigger} is true:
+		loop all players in radius 80 of {name.blamemyself}:
+			if loop-player is {target}:
+				send action bar "ᴛᴀʀɢᴇᴛ ᴅᴇᴛᴇᴄᴛᴇᴅ." to {name.blamemyself}
+				play sound "BLOCK_NOTE_BLOCK_BELL" with volume 0.3 with pitch 2 to {name.blamemyself}
+				play sound "ITEM_LODESTONE_COMPASS_LOCK" with volume 0.3 with pitch 2 to {name.blamemyself}
+				play sound "ENTITY_PARROT_IMITATE_ELDER_GUARDIAN" with volume 10 with pitch 5 to {name.blamemyself} at {target}
+				wait 0.3 seconds
+				play sound "BLOCK_CHORUS_FLOWER_GROW" with volume 0.3 with pitch 2 to {name.blamemyself}
+
+command /target [<player>]:
+	trigger:
+		send "§8ᴏᴜʀ ᴛᴀʀɢᴇᴛ:§7 %arg-1%." to {name.blamemyself}
+		set {target} to arg-1
+		
+
+on leftclick with a spyglass:
+	if all:
+		{bms.mode} is "target"
+		player is sneaking
+		player is {name.blamemyself}
+		event-item is glowing spyglass named "[ §4§lЛИНзА§r ]" with lore "§oАппарат функционирующий лишь благодаря §4Матричному Элементу."
+	then:
+	
+		if difference between now and {last_scan.cooldown} is lower than 30 seconds:
+			send action bar "&4&lᴄʀɪᴛɪᴄᴀʟ ᴛᴇᴍᴘᴇʀᴀᴛᴜʀᴇ! &r ᴛᴀʀɢᴇᴛ ѕᴄᴀɴ ᴘʀᴇᴘᴀʀᴀᴛɪᴏɴ" to player
+		else: 
+			set item cooldown of player's tool for player to 30 seconds
+			set {last_scan.cooldown} to now
+			play sound "PARTICLE_SOUL_ESCAPE" in master category with volume 1 with pitch 0.5 at player
+			play sound "INTENTIONALLY_EMPTY" with volume 1 with pitch 0.3 at player
+			
+			play sound "ENTITY_WARDEN_HEARTBEAT" in master category with volume 2 at player
+			
+			set {_frame} to frame of player
+			set {_circle::*} to circle with radius 5 and density 50
+			set {_circle2::*} to circle with radius 1.9 and density 0.4
+			set {_circle3::*} to circle with radius 1 and density 4
+			set {_circle5::*} to circle with radius 1.5 and density 5
+			
+			show vibration at player's head offset by {_circle::*} in frame of player
+			play sound "ITEM_LODESTONE_COMPASS_LOCK" with volume 1 with pitch 2 at player
+			
+			play sound "ENTITY_WARDEN_NEARBY_CLOSE"  with volume 0.6 with pitch 3 at player
+			show sonic boom at player's head offset by {_circle2::*} in frame of player
+			wait 0.3 second
+			
+			play sound "ITEM_LODESTONE_COMPASS_LOCK" with volume 1 with pitch 0.6 at player
+			wait 0.2 second
+			
+			show white ash at player's head offset by {_circle3::*} in frame of player
+			show flying glyph at player's location offset by {_circle5::*} in frame of player
+
+			loop all players in radius 40 of player:
+				if loop-player is {name.blamemyself}:
+					send action bar "> &c&lᴛᴀʀɢᴇᴛ ʀᴀᴅᴀʀ ᴀᴄᴛɪᴠᴀᴛᴇᴅ &r<" to player
+
+					
+					
+
+				if loop-player is {target}:
+					show wax on at helix at loop-player's head with radius 2, height -1.5, step 1 and density 5
+					show wax off at helix at loop-player's head with radius 1, height -1.5, step -1 and density 5
+					add 3 seconds to frozen time of loop-entity
+					play sound "BLOCK_BEACON_ACTIVATE" with volume 0.5 with pitch 0.1 at loop-player
+					play sound "BLOCK_BELL_USE" with volume 0.5 with pitch 0.4 at loop-player
+					play sound "ENTITY_WARDEN_NEARBY_CLOSE"  with volume 0.6 with pitch 3 at loop-player
+					play sound "ITEM_LODESTONE_COMPASS_LOCK" with volume 1 with pitch 5 at loop-player
+					apply glowing without particles to loop-player for 20 seconds
+					send action bar "> ᴛᴀʀɢᴇᴛ ᴅᴇᴛᴇᴄᴛᴇᴅ <" to loop-player
+
+
+
+
+
+
+
+#SONIC BOOM PREPARATION			-------------------------------------------------------------------				SONIC BOOM PREPARATION
+
+on rightclick with spyglass:
+	if player has player's tool on cooldown:
+		cancel event
+		send title "" with subtitle "§cʟᴏᴡ ᴇɴᴇʀɢʏ, ᴄᴀɴ᾽ᴛ ᴄʜᴀʀɢᴇ" to player
+	else:
+		if all:
+			player is {name.blamemyself}
+			event-item is glowing spyglass named "[ §4§lЛИНзА§r ]" with lore "§oАппарат функционирующий лишь благодаря §4Матричному Элементу."
+			
+		then:
+			set {sonic_boom.charge} to now
+			apply resistance 10 without particles to player for 5 seconds
+			apply glowing 10 without particles to player for 5 seconds
+			create bossbar titled "&l&4ᴄʜᴀʀɢɪɴɢ [       ]" and id "sonic_boom.bossbar" for player with progress 0 with colors red
+			play sound "BLOCK_BEACON_AMBIENT" with volume 0.5 with pitch 0.5 at player
+			wait 1.2 second
+			create bossbar titled "&l&cᴄʜᴀʀɢɪɴɢ [ █     ]" and id "sonic_boom.bossbar" for player with progress 33.3 with colors red
+			#send title "" with subtitle "§l[§4 █     <reset>§l]" to player
+			play sound "BLOCK_BEACON_ACTIVATE" with volume 0.2 with pitch 3 at player
+			wait 1.2 second
+			create bossbar titled "&l&4ᴄʜᴀʀɢɪɴɢ [ █ █   ]" and id "sonic_boom.bossbar" for player with progress 66.6 with colors red
+			#send title "" with subtitle "§l[§4 █ █   <reset>§l]" to player
+			play sound "BLOCK_BEACON_ACTIVATE" with volume 0.2 with pitch 6 at player
+			wait 1.2 second
+			create bossbar titled "&l&cᴄʜᴀʀɢɪɴɢ [ █ █ █ ]" and id "sonic_boom.bossbar" for player with progress 99.9 with colors red
+			#send title "" with subtitle "§l[§4 █ █ █ <reset>§l]" to player
+			play sound "BLOCK_BEACON_ACTIVATE" with volume 0.2 with pitch 9 at player
+			wait 1 second
+			play sound "BLOCK_BEACON_ACTIVATE" with volume 0.4 with pitch 0.2 at player
+			loop 2 times:
+				#send title "" with subtitle "[<green> █ █ █ <reset>]"
+				send action bar "§l[§2 ʀᴇᴀᴅʏ ᴛᴏ ѕʜᴏᴏᴛ §r§l]" to player
+				create bossbar titled "&l&2ʀᴇᴀᴅʏ ᴛᴏ ѕʜᴏᴏᴛ" and id "sonic_boom.bossbar" for player with progress 100 with colors green
+				wait 0.2 second
+				send action bar "§l[§a ʀᴇᴀᴅʏ ᴛᴏ ѕʜᴏᴏᴛ §r§l]" to player
+				wait 0.2 second
+				send action bar "§l[§2 ʀᴇᴀᴅʏ ᴛᴏ ѕʜᴏᴏᴛ §r§l]" to player
+				
+			remove bossbar "sonic_boom.bossbar"
+
+
+
+#SONIC BOOM BLAME			-------------------------------------------------------------------				SONIC BOOM BLAME
+
+on player stop using item:
+	
+	if all:
+		event-item is glowing spyglass named "[ §4§lЛИНзА§r ]" with lore "§oАппарат функционирующий лишь благодаря §4Матричному Элементу."
+		player is {name.blamemyself}
+	then:
+		if difference between now and {sonic_boom.charge} is lower than 4.6 seconds:
+			play sound "BLOCK_RESPAWN_ANCHOR_DEPLETE" in master category with volume 1 with pitch 1 at player
+			remove resistance from player
+			remove glowing from player
+			set item cooldown of player's tool for player to 5 seconds
+			loop 130 times:
+				send action bar "§l[§c ᴄʜᴀʀɢɪɴɢ ᴄᴀɴᴄᴇʟᴇᴅ §r§l]" to player
+				wait 1 tick
+				remove bossbar "sonic_boom.bossbar"
+
+		else:
+			if difference between now and {last_sonic_boom.cooldown} is lower than 5 seconds:
+				send title "" with subtitle "§cʟᴏᴡ ᴇɴᴇʀɢʏ" to player
+			
+			else:
+				set {last_sonic_boom.cooldown} to now
+				set item cooldown of player's tool for player to 15 seconds
+				play sound "ENTITY_ILLUSIONER_CAST_SPELL" in master category with volume 16 with pitch 2 at player
+				play sound "ENTITY_ILLUSIONER_CAST_SPELL" in master category with volume 16 with pitch 2 at {_hitted.entity}
+				set {_ray} to ray trace from player with max distance 50 with ray size 0.1 while ignoring passable blocks
+				send {_hitted.entity} to player
+				set {_hitted.entity} to raytrace hit entity of {_ray}
+				apply glowing 10 without particles to {_hitted.entity} for 0.2 seconds
+				play sound "ITEM_LODESTONE_COMPASS_LOCK" with volume 1 with pitch 5 at {_hitted.entity}
+				wait 0.4 second
+				apply glowing 10 without particles to {_hitted.entity} for 0.2 seconds
+				play sound "ITEM_LODESTONE_COMPASS_LOCK" with volume 1 with pitch 5 at {_hitted.entity}
+				wait 0.4 second
+				apply glowing 10 without particles to {_hitted.entity} for 0.2 seconds
+				play sound "ITEM_LODESTONE_COMPASS_LOCK" with volume 1 with pitch 5 at {_hitted.entity}
+				wait 0.4 second
+				apply glowing 10 without particles to {_hitted.entity} for 0.2 seconds
+				play sound "ITEM_LODESTONE_COMPASS_LOCK" with volume 1 with pitch 5 at {_hitted.entity}
+				wait 0.4 second
+				apply glowing 10 without particles to {_hitted.entity} for 0.2 seconds
+				play sound "ITEM_LODESTONE_COMPASS_LOCK" with volume 1 with pitch 5 at {_hitted.entity}
+				wait 0.4 second
+				apply glowing 10 without particles to {_hitted.entity} for 0.2 seconds
+				play sound "ITEM_LODESTONE_COMPASS_LOCK" with volume 1 with pitch 5 at {_hitted.entity}
+
+				play sound "PARTICLE_SOUL_ESCAPE" in master category with volume 1 with pitch 0.5 at player
+				wait 0.1 seconds
+				play sound "PARTICLE_SOUL_ESCAPE" in master category with volume 2 with pitch 0.7 at player
+				wait 0.1 seconds
+				play sound "PARTICLE_SOUL_ESCAPE" in master category with volume 3 with pitch 0.2 at player
+				wait 0.2 seconds
+				play sound "PARTICLE_SOUL_ESCAPE" in master category with volume 4 with pitch 0.8 at player
+				wait 0.2 seconds
+				play sound "PARTICLE_SOUL_ESCAPE" in master category with volume 5 with pitch 0.2 at player
+				wait 0.2 seconds
+				play sound "ENTITY_WARDEN_SONIC_CHARGE" in master category with volume 0.2 for player
+
+				wait 1.1 second
+				
+				apply darkness 10 without particles to player for 8 seconds
+				apply darkness 10 without particles to {_hitted.entity} for 8 seconds
+				play sound "ENTITY_WARDEN_HEARTBEAT" in master category with volume 2 at player
+				
+				wait 0.5 second
+				
+				#show sonic boom at line between player's head and {_hitted.block} with density 1
+				show sonic boom at line between player's head and {_hitted.entity} with density 0.5
+				
+				wait 11 ticks
+				
+				play sound "ENTITY_WARDEN_SONIC_BOOM" in master category with volume 5 at player
+				play sound "ENTITY_ILLUSIONER_PREPARE_BLINDNESS" in master category with volume 16 with pitch 2 at player
+				
+				
+				damage {_hitted.entity} by 11 hearts
+				apply slowness 2 without particles to {_hitted.entity} for 5 seconds
+				add 15 seconds to frozen time of {_hitted.entity}
+				push {_hitted.entity} upwards at speed 0.2
+				push {_hitted.entity} backwards at speed 0.4
+				
+				push player upwards at speed 0.4
+				push player backwards at speed 1.2
+				apply weakness 10 without particles to player for 25 seconds
+				apply glowing 10 without particles to {_hitted.entity} for 3 seconds
+				
+				send title "§0§k§l ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ" with subtitle "§f§k§l ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ" to {_hitted.entity}
+				wait 2 second
+				send title "§f§k§l ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ" with subtitle "§0§k§l ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ" to {_hitted.entity}
+				wait 3 tick
+				send title "§0§k§l ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ" with subtitle "§f§k§l ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ ɪᴍ ѕᴏʀʀʏ" to {_hitted.entity}
+				
+				
+#DEATH BLAME			-------------------------------------------------------------------				DEATH BLAME
+
+
+on death:
+	if victim is {name.blamemyself}:
+		set {bms_has_spyglass} to false
+		play sound "ENTITY_ILLUSIONER_CAST_SPELL" in master category with volume 16 with pitch 2 at victim		
+		play sound "ENTITY_EVOKER_PREPARE_ATTACK" with volume 1 with pitch 0.6 at victim's location
+
+on respawn:
+	if player is {name.blamemyself}:
+		if {bms_has_spyglass} is false:
+			play sound "entity.warden.emerge" at respawn location
+			play sound "ITEM_LODESTONE_COMPASS_LOCK" with volume 1 with pitch 0.6 at respawn location
+			remove glowing spyglass named "[ §4§lЛИНзА§r ]" from the player
+			wait 3 tick
+			
+			show resurrection by totem on player
+			show sonic boom on block above the player
+			show wax on at helix at respawn location with radius 2, height -1.5, step 1 and density 5
+			show wax off at helix at respawn location with radius 1, height -1.5, step -1 and density 5
+			set {_frame} to frame of player
+			set {_circle3::*} to circle with radius 1 and density 4
+			show white ash at player's head offset by {_circle3::*} in frame of player
+			send action bar "§o§4§lТебе не суждено умереть сегодня. Я заставлю тебя идти." to {name.blamemyself}
+			
+
+#WRONG PERSON PICKUP			-------------------------------------------------------------------			WRONG PERSON PICKUP
+
+
+on player's held item change:
+	if all:
+		{bms_has_spyglass} is false
+		player is not {name.blamemyself}
+	then:
+		send action bar "§cТвоя кровь ужасна. Ты не достоен моей силы." to player
+		send action bar "§c§oЭто принадлежит тебе, пока я нахожусь в твоей крови." to {name.blamemyself}
+		give glowing spyglass named "[ §4§lЛИНзА§r ]" with lore "§oАппарат функционирующий лишь благодаря §4Матричному Элементу." to {name.blamemyself}
+		set {bms_has_spyglass} to true
+		
+on pick up:
+	if all:
+		{bms_has_spyglass} is false
+		player is not {name.blamemyself}
+	then:
+		send action bar "§cТвоя кровь ужасна. Ты не достоен моей силы." to player
+		send action bar "§c§oЭто принадлежит тебе, пока я нахожусь в твоей крови." to {name.blamemyself}
+		give glowing spyglass named "[ §4§lЛИНзА§r ]" with lore "§oАппарат функционирующий лишь благодаря §4Матричному Элементу." to {name.blamemyself}
+		set {bms_has_spyglass} to true
+		
+on pick up:
+	if player is {name.blamemyself}:
+		{bms_has_spyglass} is false:
+			remove glowing spyglass named "[ §4§lЛИНзА§r ]" from the player
+			send action bar "§c§oЭто принадлежит тебе, пока я нахожусь в твоей крови." to {name.blamemyself}
+			set {bms_has_spyglass} to true
+
+	
